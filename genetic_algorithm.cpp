@@ -148,6 +148,8 @@ class SlideShow{
                 this->fitness = this->get_fitness();
             }
             
+            //this->mutation_by_swap_vertical_photos();
+
             return;
         }
 
@@ -183,6 +185,33 @@ class SlideShow{
 
                 this->fitness = this->get_fitness();
             }
+
+            return;
+        }
+
+        void mutation_by_swap_vertical_photos(){
+            srand(time(0));
+            
+            unsigned int seed = chrono::system_clock::now().time_since_epoch().count();
+
+            vector<int> indexes_of_vertical_slides;
+
+            for(int i = 0; i < (int)this->slides.size(); i++){
+                if(this->slides[i].photos.size() == 2){
+                    indexes_of_vertical_slides.push_back(i);
+                }
+            }
+
+            shuffle(indexes_of_vertical_slides.begin(), indexes_of_vertical_slides.end(), default_random_engine(seed));
+
+            int index1 = indexes_of_vertical_slides[0];
+            int index2 = indexes_of_vertical_slides[1];
+
+            Photo photo_from_slide_1 = this->slides[index1].photos[0];
+            Photo photo_from_slide_2 = this->slides[index2].photos[1];
+
+            this->slides[index1].photos[0] = photo_from_slide_2;
+            this->slides[index2].photos[1] = photo_from_slide_1;
 
             return;
         }
@@ -281,9 +310,7 @@ class GeneticAlgorithm{
         void select_and_mutate_parents(){
             int num_parents = floor(this->num_parents_percentage * this->population_size);
             sort(this->population.begin(), this->population.end());
-            /*for(int i = 0; i < this->population.size(); i++){
-                cout << "Fitness of Individual #" << i << ": " << this->population[i].fitness << endl;
-            }*/
+
             for(int i = 0; i < num_parents; i++){
                 SlideShow parent = this->population[i];
                 parent.generic_mutation();
@@ -330,6 +357,23 @@ class GeneticAlgorithm{
                     cout << "Iteration Max Fitness: " << curr_iteration_max_fitness << endl;
                 }
             }
+
+            sort(this->population.begin(), this->population.end());
+            SlideShow best_solution = this->population[this->population_size - 1];
+
+            ofstream write("submission.txt");
+
+            write << (int)best_solution.slides.size() << endl;
+
+            for(int i = 0; i < (int)best_solution.slides.size(); i++){
+                if(best_solution.slides[i].photos.size() == 1){
+                    write << best_solution.slides[i].photos[0].photo_id << endl;
+                }else if(best_solution.slides[i].photos.size() == 2){
+                    write << best_solution.slides[i].photos[0].photo_id << " " << best_solution.slides[i].photos[1].photo_id << endl;
+                }
+            }
+
+            write.close();
 
             return;
         }
@@ -384,9 +428,9 @@ int main(){
     ios_base::sync_with_stdio(false);
     cin.tie(0);
 
-    GeneticAlgorithm genetic_algorithm(1, 150, 3, "mutation_by_disturb", 0.8, 1.0, "d_pet_pictures.txt");
+    GeneticAlgorithm genetic_algorithm(1, 150, 5, "mutation_by_inversion", 0.8, 1.0, "b_lovely_landscapes.txt");
     
-    //genetic_algorithm.testcases_statistics();
+    genetic_algorithm.testcases_statistics();
     
     genetic_algorithm.benchmark();
 
